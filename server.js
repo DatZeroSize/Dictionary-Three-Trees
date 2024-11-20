@@ -3,25 +3,33 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Render sẽ cung cấp PORT
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/dictionary_db', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log(err));
+// Đọc connection string từ biến môi trường
+const mongoURI =
+  process.env.MONGO_URI ||
+  'mongodb+srv://dat261303:dat861457@dictionary.hmbch.mongodb.net/dictionary_db?retryWrites=true&w=majority';
+
+mongoose
+  .connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Define a Word model for en_vi collection
-const WordSchema = new mongoose.Schema({
-  word: { type: String, required: true },
-  definition: { type: String, required: true },
-}, { collection: 'en_vi' }); // Gắn đúng bộ sưu tập
+const WordSchema = new mongoose.Schema(
+  {
+    word: { type: String, required: true },
+    definition: { type: String, required: true },
+  },
+  { collection: 'en_vi' } // Gắn đúng bộ sưu tập
+);
 
 const Word = mongoose.model('Word', WordSchema);
 
@@ -46,6 +54,5 @@ app.get('/search', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
